@@ -1,78 +1,41 @@
 import streamlit as st
-from utils import search_document, generate_answer
+from utils import answer_question
 
 st.set_page_config(
-    page_title="Ninja Rail LLM",
-    #page_icon="imgs/avatar_streamly.png",
+    page_title="Gemini + Google Search",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
-        "Get help": "https://github.com/ninjajon/gcp-ninjarail-llm",
+        "Get help": "https://github.com/ninjajon/gemini-with-google-search-grounding",
         "About": """
-            ## Ninja Rail LLM 
-            **GitHub**: https://github.com/ninjajon/gcp-ninjarail-llm
+            ## Gemini + Google Search
+            **GitHub**: https://github.com/ninjajon/gemini-with-google-search-grounding
         """
     }
 )
 
 with st.sidebar:
-    st.title("🥷Ninja Rail LLM")
-    st.markdown("""
-        This AI Assistant aims to simulate what a Corporate Rail internal search/chatbot could look like. 
-        Fictive data has been generated with the Gemini LLM and has been stored in Vertex AI Search datastore.
-    """)
-    st.markdown("""
-        When users ask questions, the agent first search against this datastore. 
-        Then, with the retrieved data, it will use Gemini LLM to generate an answer.
-    """)
-    st.markdown("If the Assistant does not find any corporate data in the datastore, it will revert to its common knowledge (thanks Gemini!) to answer.")
-    
-    st.subheader("You can explore the fictive data here:")
-    st.link_button("Ninja Rail Public Doc", "https://storage.googleapis.com/ninjarail-llm-data/pdfs/ninjarail-public-corporate-data.pdf")
-    st.link_button("Ninja Rail Internal Doc", "https://storage.googleapis.com/ninjarail-llm-data/pdfs/ninjarail-internal-corporate-data.pdf")
+    st.title("Gemini + Google Search")
+    st.markdown("This AI Assistant will answer your questions while making sureit grounds its responses on Google Search results.")
+    st.markdown("You can simply ask a question and hit Enter, or you can also add context/instructions to your question. For example, let's say you want to ask the following question:")
+    st.markdown("- What is Gen AI?")
+    st.markdown("Try it without any context, and then try it again with the following context:")
+    st.markdown("- Answer like I'm a 5 years old")
+    st.markdown("Notice the difference in the response.")
+    st.markdown("Built with Google [Grounding API](https://cloud.google.com/vertex-ai/generative-ai/docs/model-reference/grounding#ground-on-public-data)")
+    st.markdown("Source Code: https://github.com/ninjajon/gemini-with-google-search-grounding")
 
-st.header("🥷Ninja Rail LLM", divider="rainbow")
-st.subheader("Ask me anything...")
+st.header("Gemini + Google Search", divider="rainbow")
+st.subheader("Ask me anything... I'll use Google Search to answer")
 
-example_prompts = [
-    "Where is our Head Quarter?",
-    "What is our mission?",
-    "Who is our CEO?",
-    "Summarize the code of conduct",
-]
+question = st.text_input("Ask your question here")
 
-button_pressed = ""
+context = st.text_area("[Optional] Add context to your question")
 
-button_cols = st.columns(4)
+prompt = "Question: " + question + "\nContext: " + context + "\nAnswer:"
 
-if button_cols[0].button(example_prompts[0]):
-    button_pressed = example_prompts[0]
-if button_cols[1].button(example_prompts[1]):
-    button_pressed = example_prompts[1]
-if button_cols[2].button(example_prompts[2]):
-    button_pressed = example_prompts[2]
-if button_cols[3].button(example_prompts[3]):
-    button_pressed = example_prompts[3]
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-if prompt := (st.chat_input("How can I help you?") or button_pressed):
-
-    prompt = prompt.replace('"', "").replace("'", "")
-    if prompt != "":
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        st.chat_message("user").write(prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Searching..."):
-            search_result = search_document(prompt)
-            source_doc_url = search_result.source_doc_url
-            source_file_name = search_result.source_file_name
-            summary = search_result.summary
-            extracted_content = search_result.extracted_content
-
-        with st.spinner("Generating answer..."):
-            answer = generate_answer(prompt, summary, extracted_content, source_doc_url)
-            st.write(answer)
-            st.session_state.messages.append({"role": "assistant", "content": answer})
+if question != "":
+    with st.spinner("Searching..."):
+        answer = answer_question(prompt)
+        st.write("### Answer")
+        st.write(answer)
