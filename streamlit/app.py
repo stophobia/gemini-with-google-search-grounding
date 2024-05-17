@@ -29,12 +29,14 @@ st.header("Gemini + Google Search", divider="rainbow")
 st.subheader("Ask me anything... I'll use Google Search to answer")
 
 question = st.text_input("Ask your question here")
-
 context = st.text_area("[Optional] Add context to your question")
-
 prompt = "Question: " + question + "\nContext: " + context + "\nAnswer:"
 
-if question != "":
+button_pressed = ""
+if st.button("Search", type="secondary"):
+    button_pressed = True
+
+if button_pressed:
     with st.spinner("Searching..."):
         answer = answer_question(prompt)
         st.write("### Answer")
